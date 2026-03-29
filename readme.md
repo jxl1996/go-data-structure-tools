@@ -1,5 +1,5 @@
 ```bash
-go get github.com/jxl1996/go-data-structure-tools
+go get github.com/jxl1996/go-data-structure-tools@master
 ```
 
 
