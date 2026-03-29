@@ -22,3 +22,11 @@ func TestPrint(t *testing.T) {
 	root2.MorrisPreOrder()
 	root2.MorrisPostOrder()
 }
+
+func TestPrint2(t *testing.T) {
+	// root := GenerateRandom(30)
+	// root := GenerateCompleteTree(30)
+	root := GenerateRandomBST(30)
+	root.Draw()
+	root.Print()
+}
