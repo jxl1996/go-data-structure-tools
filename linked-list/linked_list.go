@@ -36,6 +36,9 @@ func GenerateByArrayString(arrayString string) *ListNode {
 	arrayString = strings.Trim(arrayString, " ")
 	arrayString = strings.TrimLeft(arrayString, "[")
 	arrayString = strings.TrimRight(arrayString, "]")
+	if len(arrayString) == 0 {
+		return nil
+	}
 	strArr := strings.Split(arrayString, ",")
 	intArr := make([]int, 0)
 	for _, str := range strArr {

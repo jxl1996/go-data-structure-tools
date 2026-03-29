@@ -48,6 +48,9 @@ func GenerateByArrayString(arrayString string) *TreeNode {
 	arrayString = strings.TrimLeft(arrayString, "[")
 	arrayString = strings.TrimRight(arrayString, "]")
 	arrayString = strings.ToLower(arrayString)
+	if len(arrayString) == 0 {
+		return nil
+	}
 	strArr := strings.Split(arrayString, ",")
 	return Generate(strArr)
 }
