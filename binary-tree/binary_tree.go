@@ -2,6 +2,7 @@ package binary_tree
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"sort"
 	"strconv"
@@ -308,14 +309,14 @@ func generateRecursive(n int, min, max int, r *rand.Rand) *TreeNode {
 	return root
 }
 
-// GenerateRandomBST 生成一个包含 n 个节点的平衡二叉搜索树
+// GenerateBST 生成一个包含 n 个节点的平衡二叉搜索树
 // size: 节点个数
 // bounds: 可选参数。
 //
 //	如果不传，默认随机范围 [0, 100)
 //	如果传 1 个，范围为 [0, bounds[0])
 //	如果传 2 个，范围为 [bounds[0], bounds[1])
-func GenerateRandomBST(n int, bounds ...int) *TreeNode {
+func GenerateBST(n int, bounds ...int) *TreeNode {
 	if n <= 0 {
 		return nil
 	}
@@ -365,4 +366,158 @@ func buildBST(nums []int, left, right int) *TreeNode {
 	root.Right = buildBST(nums, mid+1, right)
 
 	return root
+}
+
+// GenerateFullTree 根据指定高度生成满二叉树
+// height: 树的高度（根节点为第 1 层）
+// bounds: 可选参数。
+//
+//	如果不传，默认随机范围 [0, 100)
+//	如果传 1 个，范围为 [0, bounds[0])
+//	如果传 2 个，范围为 [bounds[0], bounds[1])
+func GenerateFullTree(height int, bounds ...int) *TreeNode {
+	if height <= 0 {
+		return nil
+	}
+
+	// 1. 统一处理随机数范围逻辑
+	minVal, maxVal := 0, 100
+	if len(bounds) == 1 {
+		maxVal = bounds[0]
+	} else if len(bounds) >= 2 {
+		minVal, maxVal = bounds[0], bounds[1]
+	}
+	if minVal >= maxVal {
+		minVal, maxVal = maxVal, minVal+1
+	}
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	// 2. 调用递归构建函数
+	return buildFullRecursive(height, minVal, maxVal, r)
+}
+
+func buildFullRecursive(h int, min, max int, r *rand.Rand) *TreeNode {
+	if h <= 0 {
+		return nil
+	}
+
+	// 创建当前节点
+	node := &TreeNode{
+		Val: r.Intn(max-min) + min,
+	}
+
+	// 如果还没达到叶子层，则必须同时生成左右孩子
+	if h > 1 {
+		node.Left = buildFullRecursive(h-1, min, max, r)
+		node.Right = buildFullRecursive(h-1, min, max, r)
+	}
+
+	return node
+}
+
+// IsFullTree 判断二叉树是否为满二叉树
+func (root *TreeNode) IsFullTree() bool {
+	if root == nil {
+		return true
+	}
+	// 如果是叶子节点，返回 true
+	if root.Left == nil && root.Right == nil {
+		return true
+	}
+	// 如果左右孩子都存在，递归检查左右子树
+	if root.Left != nil && root.Right != nil {
+		return root.Left.IsFullTree() && root.Right.IsFullTree()
+	}
+	// 只有一个孩子，肯定不是满二叉树
+	return false
+}
+
+// IsCompleteTree 判断当前树是否为完全二叉树
+func (root *TreeNode) IsCompleteTree() bool {
+	if root == nil {
+		return true
+	}
+
+	// 使用切片模拟队列进行层序遍历
+	queue := []*TreeNode{root}
+	// 标记位：一旦发现某个节点为 nil，后续所有节点都不能有值
+	foundNil := false
+
+	for len(queue) > 0 {
+		curr := queue[0]
+		queue = queue[1:]
+
+		if curr == nil {
+			// 第一次遇到空节点，标记后续不能再有节点
+			foundNil = true
+		} else {
+			// 如果之前已经遇到过空节点，但现在又遇到了非空节点
+			// 说明结构不连续，不是完全二叉树
+			if foundNil {
+				return false
+			}
+			// 将左右孩子入队（包括 nil，用于占位判断）
+			queue = append(queue, curr.Left)
+			queue = append(queue, curr.Right)
+		}
+	}
+
+	return true
+}
+
+// IsBST 判断当前树是否为二叉搜索树
+func (root *TreeNode) IsBST() bool {
+	return validateBST(root, math.MinInt64, math.MaxInt64)
+}
+
+func validateBST(node *TreeNode, min, max int64) bool {
+	if node == nil {
+		return true
+	}
+
+	// 当前节点值必须在 (min, max) 范围内
+	val := int64(node.Val)
+	if val <= min || val >= max {
+		return false
+	}
+
+	// 递归检查左子树：更新上限为当前节点值
+	// 递归检查右子树：更新下限为当前节点值
+	return validateBST(node.Left, min, val) && validateBST(node.Right, val, max)
+}
+
+// IsBalanced 判断当前二叉树是否为平衡二叉树
+func (root *TreeNode) IsBalanced() bool {
+	return checkHeight(root) != -1
+}
+
+// checkHeight 递归函数：
+// 如果平衡，返回该子树的高度；
+// 如果不平衡，返回 -1。
+func checkHeight(node *TreeNode) float64 {
+	if node == nil {
+		return 0
+	}
+
+	// 1. 递归检查左子树
+	leftHeight := checkHeight(node.Left)
+	if leftHeight == -1 {
+		return -1
+	}
+
+	// 2. 递归检查右子树
+	rightHeight := checkHeight(node.Right)
+	if rightHeight == -1 {
+		return -1
+	}
+
+	// 3. 核心逻辑：判断当前节点是否平衡
+	// 如果左右子树高度差 > 1，则不平衡
+	if math.Abs(leftHeight-rightHeight) > 1 {
+		return -1
+	}
+
+	// 4. 如果平衡，返回当前节点的高度 (左右子树最大高度 + 1)
+	return math.Max(leftHeight, rightHeight) + 1
 }

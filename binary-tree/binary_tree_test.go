@@ -1,6 +1,9 @@
 package binary_tree
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestPrint(t *testing.T) {
 	input := []string{"3", "9", "20", "null", "null", "15", "7"}
@@ -24,9 +27,15 @@ func TestPrint(t *testing.T) {
 }
 
 func TestPrint2(t *testing.T) {
-	// root := GenerateRandom(30)
-	// root := GenerateCompleteTree(30)
-	root := GenerateRandomBST(30)
-	root.Draw()
+	root := GenerateRandom(30)
+	// root := GenerateCompleteTree(31)
+	// root := GenerateBST(30)
+	// root := GenerateFullTree(5)
+	// root.Draw()
+
+	fmt.Println("是否为满二叉树：", root.IsFullTree())
+	fmt.Println("是否为完全二叉树：", root.IsCompleteTree())
+	fmt.Println("是否为二叉搜索树：", root.IsBST())
+	fmt.Println("是否平衡：", root.IsBalanced())
 	root.Print()
 }
