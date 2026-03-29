@@ -27,9 +27,9 @@ func TestPrint(t *testing.T) {
 }
 
 func TestPrint2(t *testing.T) {
-	root := GenerateRandom(10, 10, 500)
-	// root := GenerateCompleteTree(10, )
-	// root := GenerateBST(30)
+	root := GenerateRandom(50, 10, 10000)
+	// root := GenerateCompleteTree(10, 10, 10000)
+	// root := GenerateBST(30, 10, 10000)
 	// root := GenerateFullTree(5)
 	root.Draw("root.png")
 

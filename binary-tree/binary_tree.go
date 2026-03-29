@@ -72,23 +72,26 @@ func (root *TreeNode) Print() {
 		return
 	}
 
+	// 1. 计算每个子树所需的最小宽度
 	widths := make(map[*TreeNode]int)
 	var getWidth func(n *TreeNode) int
 	getWidth = func(n *TreeNode) int {
 		if n == nil {
 			return 0
 		}
-		vLen := len(fmt.Sprintf("(%d)", n.Val))
+		valStr := fmt.Sprintf("(%d)", n.Val)
 		lw, rw := getWidth(n.Left), getWidth(n.Right)
-		w := lw + rw + 4
-		if vLen > w {
-			w = vLen
+		// 核心：宽度至少要能放下当前节点文字，且预留左右间距
+		w := lw + rw + 2
+		if len(valStr) > w {
+			w = len(valStr)
 		}
 		widths[n] = w
 		return w
 	}
 	getWidth(root)
 
+	// 2. 第一次递归：初步计算坐标
 	canvasNodes := []DrawNode{}
 	var buildPos func(n *TreeNode, x, y int)
 	buildPos = func(n *TreeNode, x, y int) {
@@ -96,108 +99,98 @@ func (root *TreeNode) Print() {
 			return
 		}
 		valStr := fmt.Sprintf("(%d)", n.Val)
-		vLen := len(valStr)
 		lw := 0
 		if n.Left != nil {
 			lw = widths[n.Left]
 		}
 
-		mid := x + lw + 2
-		if n.Left == nil {
-			mid = x + 2
-		}
-
+		// 确保 mid 至少在左边之后
+		mid := x + lw
 		canvasNodes = append(canvasNodes, DrawNode{
 			ValStr: valStr,
-			X:      mid - vLen/2,
+			X:      mid - len(valStr)/2,
 			Mid:    mid,
 			Y:      y,
-			Node:   n, // 存入引用
+			Node:   n,
 		})
 
 		if n.Left != nil {
 			buildPos(n.Left, x, y+2)
 		}
 		if n.Right != nil {
-			buildPos(n.Right, mid+2, y+2)
+			buildPos(n.Right, mid+1, y+2)
 		}
 	}
 	buildPos(root, 0, 0)
 
-	maxY, maxX := 0, 0
-	for _, n := range canvasNodes {
-		if n.Y > maxY {
-			maxY = n.Y
+	// 3. 关键修正：防止负数坐标并计算确切边界
+	minX, maxX, maxY := 0, 0, 0
+	for _, d := range canvasNodes {
+		if d.X < minX {
+			minX = d.X
 		}
-		if n.X+len(n.ValStr) > maxX {
-			maxX = n.X + len(n.ValStr)
+		if d.X+len(d.ValStr) > maxX {
+			maxX = d.X + len(d.ValStr)
+		}
+		if d.Y > maxY {
+			maxY = d.Y
 		}
 	}
+
+	// 将所有坐标平移，确保从 0 开始且不越界
+	offsetX := -minX
+	totalWidth := maxX + offsetX + 5 // 额外给点余量
 
 	canvas := make([][]rune, maxY+2)
 	for i := range canvas {
-		canvas[i] = []rune(strings.Repeat(" ", maxX+10))
+		canvas[i] = []rune(strings.Repeat(" ", totalWidth))
 	}
 
-	// 绘制文字
+	// 4. 填充文字（带偏移量）
+	for i := range canvasNodes {
+		d := &canvasNodes[i]
+		d.X += offsetX
+		d.Mid += offsetX
+		for j, r := range d.ValStr {
+			canvas[d.Y][d.X+j] = r
+		}
+	}
+
+	// 5. 绘制连线
 	for _, d := range canvasNodes {
-		for i, r := range d.ValStr {
-			canvas[d.Y][d.X+i] = r
-		}
-	}
-
-	// 核心修正：绘制支点和连线
-	var linkLines func(n *TreeNode, d DrawNode)
-	linkLines = func(n *TreeNode, d DrawNode) {
-		if n == nil {
-			return
+		if d.Node.Left == nil && d.Node.Right == nil {
+			continue
 		}
 
-		// --- 关键判断：只有不是叶子节点才画支点 ---
-		if n.Left != nil || n.Right != nil {
-			canvas[d.Y+1][d.Mid] = '┴'
-		}
+		// 画支点
+		canvas[d.Y+1][d.Mid] = '┴'
 
-		if n.Left != nil {
+		if d.Node.Left != nil {
 			for _, cn := range canvasNodes {
-				if cn.Y == d.Y+2 && cn.Mid < d.Mid && cn.Node == n.Left {
+				if cn.Node == d.Node.Left {
 					canvas[d.Y+1][cn.Mid] = '╭'
 					for i := cn.Mid + 1; i < d.Mid; i++ {
 						canvas[d.Y+1][i] = '─'
 					}
-					linkLines(n.Left, cn)
-					break
 				}
 			}
 		}
-		if n.Right != nil {
+		if d.Node.Right != nil {
 			for _, cn := range canvasNodes {
-				if cn.Y == d.Y+2 && cn.Mid > d.Mid && cn.Node == n.Right {
+				if cn.Node == d.Node.Right {
 					canvas[d.Y+1][cn.Mid] = '╮'
 					for i := d.Mid + 1; i < cn.Mid; i++ {
 						canvas[d.Y+1][i] = '─'
 					}
-					linkLines(n.Right, cn)
-					break
 				}
 			}
 		}
 	}
 
-	for _, d := range canvasNodes {
-		if d.Y == 0 {
-			linkLines(root, d)
-			break
-		}
-	}
-
+	// 6. 输出结果
 	for _, row := range canvas {
-		line := strings.TrimRight(string(row), " ")
-		if line != "" {
-			fmt.Println(line)
-		}
+		fmt.Println(strings.TrimRight(string(row), " "))
 	}
-	fmt.Println()
 }
 
 // GenerateRandom 生成一个包含 n 个节点的随机二叉树
