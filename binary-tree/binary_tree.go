@@ -193,6 +193,16 @@ func (root *TreeNode) Print() {
 	}
 }
 
+// GetHeight 获取树高度
+func (root *TreeNode) GetHeight() int {
+	if root == nil {
+		return 0
+	}
+	l := root.Left.GetHeight()
+	r := root.Right.GetHeight()
+	return max(l, r) + 1
+}
+
 // GenerateRandom 生成一个包含 n 个节点的随机二叉树
 // size: 节点个数
 // bounds: 可选参数。
@@ -513,4 +523,39 @@ func checkHeight(node *TreeNode) float64 {
 
 	// 4. 如果平衡，返回当前节点的高度 (左右子树最大高度 + 1)
 	return math.Max(leftHeight, rightHeight) + 1
+}
+
+// GetBalanceFactor 获取平衡因子
+func (root *TreeNode) GetBalanceFactor() int {
+	if root == nil {
+		return 0
+	}
+	// 左子树高度 - 右子树高度
+	return root.Left.GetHeight() - root.Right.GetHeight()
+}
+
+// GetImbalancedNodes 找出所有平衡因子绝对值 >= 2 的节点
+func (root *TreeNode) GetImbalancedNodes() map[*TreeNode]bool {
+	imbalanced := make(map[*TreeNode]bool)
+
+	var check func(*TreeNode) int
+	check = func(node *TreeNode) int {
+		if node == nil {
+			return 0
+		}
+
+		lh := check(node.Left)
+		rh := check(node.Right)
+
+		// 计算并检查平衡因子
+		if math.Abs(float64(lh-rh)) >= 2 {
+			imbalanced[node] = true
+		}
+
+		// 返回当前节点高度
+		return int(math.Max(float64(lh), float64(rh))) + 1
+	}
+
+	check(root)
+	return imbalanced
 }

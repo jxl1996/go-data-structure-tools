@@ -10,13 +10,13 @@ func TestPrint(t *testing.T) {
 	input := []string{"1", "2", "2", "null", "3", "null", "3"}
 	root := Generate(input)
 	root.Print()
-	root.Draw()
+	// root.Draw()
 
 	// str := "[1,2,2,null,3,null,3]"
 	str := "[] "
 	root2 := GenerateByArrayString(str)
 	root2.Print()
-	root2.Draw()
+	// root2.Draw()
 	root2.PreOrder()
 	root2.InOrder()
 	root2.PostOrder()
@@ -24,14 +24,28 @@ func TestPrint(t *testing.T) {
 	root2.MorrisInOrder()
 	root2.MorrisPreOrder()
 	root2.MorrisPostOrder()
+	fmt.Println("高度", root2.GetHeight())
 }
 
 func TestPrint2(t *testing.T) {
-	// root := GenerateRandom(50, 10, 10000)
+	root := GenerateRandom(10)
 	// root := GenerateCompleteTree(10, 10, 10000)
 	// root := GenerateBST(30, 10, 10000)
-	root := GenerateFullTree(7)
-	root.Draw("root.png")
+	// root := GenerateFullTree(3)
+	// root.Draw("root.png", func(n *TreeNode) NodeStyle {
+	// 	if n.Val > 50 {
+	// 		return StyleSpecial
+	// 	}
+	// 	return StyleDefault
+	// })
+
+	root.Draw("root.png", func(n *TreeNode) NodeStyle {
+		// 假设你有一个计算平衡因子的函数
+		if n.GetBalanceFactor() >= 2 {
+			return StyleWarning // 失衡节点标红
+		}
+		return StyleDefault
+	})
 
 	fmt.Println("是否为满二叉树：", root.IsFullTree())
 	fmt.Println("是否为完全二叉树：", root.IsCompleteTree())
