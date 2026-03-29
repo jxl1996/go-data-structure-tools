@@ -3,103 +3,144 @@ package binary_tree
 import (
 	"fmt"
 	"github.com/fogleman/gg"
+	"image/color"
 	"math"
 	"strconv"
 )
 
 const (
 	nodeRadius = 25.0 // 节点半径
-	levelSpace = 80.0 // 层间距
-	minSpace   = 40.0 // 同层节点最小间距
+	levelSpace = 90.0 // 层间距
+	minSpace   = 50.0 // 同层节点最小间距
 )
 
-// Draw 保存为图片
-// 形参： 可传入图片名称， 可不传，不传默认为binary_tree.png
+// Draw 完美直线美化版：保存为图片（双遍历修复）
 func (root *TreeNode) Draw(opts ...string) {
-	var filename = "binary_tree.png"
+	if root == nil {
+		fmt.Println("空树，跳过绘制")
+		return
+	}
+
+	var filename = "tree.png"
 	if len(opts) > 0 {
 		filename = opts[0]
 	}
 
-	// 动态计算图片尺寸
+	// 1. 动态计算画布尺寸
 	depth := getDepth(root)
-	totalWidth := getSubtreeWidth(root) * 2
-	imgWidth := int(totalWidth + 100)
-	imgHeight := int(float64(depth)*levelSpace + 100)
+	// 宽度随深度指数增长，防止深层挤压
+	imgWidth := int(math.Pow(2, float64(depth-1))*minSpace + 200)
+	imgHeight := int(float64(depth)*levelSpace + 120)
 
 	dc := gg.NewContext(imgWidth, imgHeight)
-	dc.SetRGB(1, 1, 1) // 背景涂白
+
+	// 背景：纯白
+	dc.SetRGB(1, 1, 1)
 	dc.Clear()
 
-	// 载入内置字体（或指定路径字体）
+	// 字体设置（请根据系统环境修改路径，或注销使用默认字体）
 	if err := dc.LoadFontFace("/Library/Fonts/Arial.ttf", 18); err != nil {
-		// 如果没字体，会使用默认简单字体
+		// 找不到字体时会回退到系统默认
 	}
 
-	drawNode(dc, root, float64(imgWidth)/2, 50, totalWidth/2)
+	// 初始位置
+	initialX := float64(imgWidth) / 2
+	initialY := 60.0
+	initialOffsetX := float64(imgWidth) / 4
 
-	err := dc.SavePNG(filename)
-	if err != nil {
-		fmt.Println("保存失败:", err)
+	// 2. 第一次遍历：绘制所有连线
+	drawAllLinesStraight(dc, root, initialX, initialY, initialOffsetX)
+
+	// 3. 第二次遍历：绘制所有节点
+	drawAllNodesStraight(dc, root, initialX, initialY, initialOffsetX)
+
+	// 4. 保存结果
+	if err := dc.SavePNG(filename); err != nil {
+		fmt.Println("❌ 保存失败:", err)
 	} else {
-		fmt.Println("图片已生成:", filename)
+		fmt.Println("✨ 完美修复版直线图片已生成:", filename)
 	}
 }
 
-// 计算子树需要的总宽度
-func getSubtreeWidth(node *TreeNode) float64 {
-	if node == nil {
-		return 0
-	}
-	lw := getSubtreeWidth(node.Left)
-	rw := getSubtreeWidth(node.Right)
-	// 宽度由左右子树加上间距决定，叶子节点给一个基础宽度
-	width := lw + rw + minSpace
-	return math.Max(width, nodeRadius*2.5)
-}
-
-// 递归绘制
-func drawNode(dc *gg.Context, node *TreeNode, x, y, width float64) {
+// 第一次遍历：绘制所有连线 (直线)
+func drawAllLinesStraight(dc *gg.Context, node *TreeNode, x, y, offsetX float64) {
 	if node == nil {
 		return
 	}
 
-	// 1. 绘制到子节点的连线
-	dc.SetRGB(0.5, 0.5, 0.5) // 灰色线条
-	dc.SetLineWidth(2)
+	// 连线样式
+	dc.SetRGBA(0.3, 0.3, 0.3, 0.8) // 深灰色实线
+	dc.SetLineWidth(2.0)
 
+	// 绘制到左子节点的连线
 	if node.Left != nil {
-		lx := x - width/4
-		ly := y + levelSpace
+		lx, ly := x-offsetX, y+levelSpace
 		dc.DrawLine(x, y, lx, ly)
 		dc.Stroke()
-		drawNode(dc, node.Left, lx, ly, width/2)
+		// 递归绘制左子树连线
+		drawAllLinesStraight(dc, node.Left, lx, ly, offsetX/2)
 	}
+
+	// 绘制到右子节点的连线
 	if node.Right != nil {
-		rx := x + width/4
-		ry := y + levelSpace
+		rx, ry := x+offsetX, y+levelSpace
 		dc.DrawLine(x, y, rx, ry)
 		dc.Stroke()
-		drawNode(dc, node.Right, rx, ry, width/2)
+		// 递归绘制右子树连线
+		drawAllLinesStraight(dc, node.Right, rx, ry, offsetX/2)
 	}
-
-	// 2. 绘制节点圆形
-	dc.SetRGB(1, 1, 1) // 白色背景
-	dc.DrawCircle(x, y, nodeRadius)
-	dc.FillPreserve()
-	dc.SetRGB(0.2, 0.6, 0.9) // 蓝色边框
-	dc.SetLineWidth(3)
-	dc.Stroke()
-
-	// 3. 绘制文字
-	dc.SetRGB(0, 0, 0) // 黑色文字
-	valStr := strconv.Itoa(node.Val)
-	dc.DrawStringAnchored(valStr, x, y, 0.5, 0.5)
 }
 
+// 第二次遍历：绘制所有节点
+func drawAllNodesStraight(dc *gg.Context, node *TreeNode, x, y, offsetX float64) {
+	if node == nil {
+		return
+	}
+
+	// A. 先绘制节点阴影 (增加立体感)
+	dc.SetRGBA(0, 0, 0, 0.1)
+	dc.DrawCircle(x+1, y+1, nodeRadius)
+	dc.Fill()
+
+	// B. 绘制节点圆柱色渐变
+	grad := gg.NewLinearGradient(x, y-nodeRadius, x, y+nodeRadius)
+	grad.AddColorStop(0, color.RGBA{R: 80, G: 160, B: 240, A: 255}) // 亮蓝
+	grad.AddColorStop(1, color.RGBA{R: 40, G: 100, B: 180, A: 255}) // 深蓝
+
+	dc.SetFillStyle(grad)
+	dc.DrawCircle(x, y, nodeRadius)
+	dc.Fill()
+
+	// C. 节点外圈
+	dc.SetRGB(0.2, 0.5, 0.8)
+	dc.SetLineWidth(2)
+	dc.DrawCircle(x, y, nodeRadius)
+	dc.Stroke()
+
+	// D. 文字 (白色)
+	dc.SetRGB(1, 1, 1)
+	valStr := strconv.Itoa(node.Val)
+	dc.DrawStringAnchored(valStr, x, y, 0.5, 0.5)
+
+	// 递归绘制左子树节点
+	if node.Left != nil {
+		drawAllNodesStraight(dc, node.Left, x-offsetX, y+levelSpace, offsetX/2)
+	}
+	// 递归绘制右子树节点
+	if node.Right != nil {
+		drawAllNodesStraight(dc, node.Right, x+offsetX, y+levelSpace, offsetX/2)
+	}
+}
+
+// getDepth 辅助函数：获取树深度
 func getDepth(node *TreeNode) int {
 	if node == nil {
 		return 0
 	}
-	return 1 + int(math.Max(float64(getDepth(node.Left)), float64(getDepth(node.Right))))
+	l := getDepth(node.Left)
+	r := getDepth(node.Right)
+	if l > r {
+		return l + 1
+	}
+	return r + 1
 }

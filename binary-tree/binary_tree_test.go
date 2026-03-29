@@ -6,8 +6,8 @@ import (
 )
 
 func TestPrint(t *testing.T) {
-	input := []string{"3", "9", "20", "null", "null", "15", "7"}
-	// input := []string{"1", "2", "2", "null", "3", "null", "3"}
+	// input := []string{"3", "9", "20", "null", "null", "15", "7"}
+	input := []string{"1", "2", "2", "null", "3", "null", "3"}
 	root := Generate(input)
 	root.Print()
 	root.Draw()
@@ -27,11 +27,11 @@ func TestPrint(t *testing.T) {
 }
 
 func TestPrint2(t *testing.T) {
-	root := GenerateRandom(20)
-	// root := GenerateCompleteTree(31)
+	root := GenerateRandom(10, 10, 500)
+	// root := GenerateCompleteTree(10, )
 	// root := GenerateBST(30)
 	// root := GenerateFullTree(5)
-	root.Draw()
+	root.Draw("root.png")
 
 	fmt.Println("是否为满二叉树：", root.IsFullTree())
 	fmt.Println("是否为完全二叉树：", root.IsCompleteTree())
