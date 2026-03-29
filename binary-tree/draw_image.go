@@ -58,7 +58,7 @@ func (root *TreeNode) Draw(opts ...string) {
 	if err := dc.SavePNG(filename); err != nil {
 		fmt.Println("❌ 保存失败:", err)
 	} else {
-		fmt.Println("✨ 完美修复版直线图片已生成:", filename)
+		fmt.Println("✨ 图片已生成:", filename)
 	}
 }
 
