@@ -9,13 +9,13 @@ func TestPrint(t *testing.T) {
 	// input := []string{"3", "9", "20", "null", "null", "15", "7"}
 	input := []string{"1", "2", "2", "null", "3", "null", "3"}
 	root := Generate(input)
-	root.Print()
+	root.Print("root1展示：")
 	// root.Draw()
 
 	// str := "[1,2,2,null,3,null,3]"
 	str := "[] "
 	root2 := GenerateByArrayString(str)
-	root2.Print()
+	root2.Print("root2展示：")
 	// root2.Draw()
 	root2.PreOrder()
 	root2.InOrder()

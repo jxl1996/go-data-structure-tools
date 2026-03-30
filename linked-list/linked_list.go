@@ -51,7 +51,10 @@ func GenerateByArrayString(arrayString string) *ListNode {
 }
 
 // Print 可视化打印链表
-func (head *ListNode) Print() {
+func (head *ListNode) Print(msg ...string) {
+	if len(msg) > 0 {
+		fmt.Print(msg[0], " ")
+	}
 	var nodes []string
 	curr := head
 

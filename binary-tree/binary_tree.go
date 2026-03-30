@@ -66,10 +66,18 @@ type DrawNode struct {
 	Node      *TreeNode // 增加原始指针引用
 }
 
-func (root *TreeNode) Print() {
+func (root *TreeNode) Print(msg ...string) {
 	if root == nil {
-		fmt.Println("Empty Tree")
+		if len(msg) > 0 {
+			fmt.Println(msg[0] + "Empty Tree")
+		} else {
+			fmt.Println("Empty Tree")
+		}
 		return
+	}
+
+	if len(msg) > 0 {
+		fmt.Println(msg[0])
 	}
 
 	// 1. 计算每个子树所需的最小宽度
