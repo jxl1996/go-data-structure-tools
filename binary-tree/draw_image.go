@@ -26,6 +26,10 @@ func (root *TreeNode) Draw(filename string, styleFunc func(*TreeNode) NodeStyle)
 		return
 	}
 
+	if filename == "" {
+		filename = "tree.png"
+	}
+
 	depth := root.GetHeight()
 	// 动态计算尺寸，确保大树不挤压
 	imgWidth := int(math.Pow(2, float64(depth-1))*50.0 + 200)
